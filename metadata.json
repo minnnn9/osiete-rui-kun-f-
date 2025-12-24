@@ -1,0 +1,7 @@
+{
+  "name": "Oshiete! Rui-kun!!",
+  "description": "An interactive AI-powered visual novel game based on the 'Oshiete! Rui-kun!!' aesthetic, featuring dynamic storytelling using Gemini.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

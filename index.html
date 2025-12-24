@@ -1,0 +1,67 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oshiete! Rui-kun!!</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=Gaegu&family=Noto+Sans+KR:wght@400;700&display=swap');
+        
+        @font-face {
+            font-family: 'OngeulipCocoa';
+            src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2302@1.0/Ongeulip-Cocoa.woff2') format('woff2');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        body {
+            font-family: 'Noto+Sans+KR', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #f0faff;
+        }
+        .vn-font {
+            font-family: 'Zen Maru Gothic', 'Noto+Sans+KR', sans-serif;
+        }
+        .cocoa-font {
+            font-family: 'OngeulipCocoa', sans-serif;
+        }
+        .achievement-toast {
+            transform: translateY(200%);
+            transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.5s;
+            opacity: 0;
+        }
+        .achievement-toast.visible {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        /* 커스텀 스크롤바 */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #d9e8ff;
+            border-radius: 10px;
+        }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.34.0"
+  }
+}
+</script>
+</head>
+<body>
+    <div id="root"></div>
+</body>
+</html>
