@@ -11,20 +11,119 @@ interface SaveSlot {
   timestamp: string | null;
 }
 
+// 프리로딩할 이미지 URL 목록
+const PRELOAD_IMAGES = [
+  "https://i.postimg.cc/1zhG7m76/home.png", // 메인
+  "https://i.postimg.cc/rw2WSSyy/road(1).png", // 로드 화면
+  "https://i.postimg.cc/pTvxV6k6/1.png", // 인게임 배경 1
+  "https://i.postimg.cc/QtDsNySY/2.png", // 인게임 배경 2
+  "https://i.postimg.cc/QtDsNySf/3.png", // 인게임 배경 3
+  "https://i.postimg.cc/65pWGFwp/4.png", // 인게임 배경 4
+  "https://i.postimg.cc/1XYLFCcq/5.png", // 인게임 배경 5
+  "https://i.postimg.cc/658sKKtG/6.png"  // 인게임 배경 6
+];
+
+// Sparkle Cursor Component
+const SparkleCursor: React.FC = () => {
+  useEffect(() => {
+    let lastTime = 0;
+    const colors = ['#FFB6C1', '#E0B0FF', '#FFFFFF', '#FFD1DC', '#F0E6FF'];
+    
+    const createSparkle = (x: number, y: number, isBurst = false, angle = 0, distance = 0) => {
+      const sparkle = document.createElement('div');
+      sparkle.className = 'sparkle';
+      
+      const size = isBurst ? (Math.random() * 12 + 8) : (Math.random() * 10 + 6);
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      
+      sparkle.style.width = `${size}px`;
+      sparkle.style.height = `${size}px`;
+      sparkle.style.backgroundColor = color;
+      sparkle.style.left = `${x - size / 2}px`;
+      sparkle.style.top = `${y - size / 2}px`;
+      
+      let tx, ty, duration;
+
+      if (isBurst) {
+        // Burst effect: move radially outwards
+        tx = Math.cos(angle) * distance;
+        ty = Math.sin(angle) * distance;
+        duration = Math.random() * 0.5 + 0.4; // Shorter for burst
+      } else {
+        // Normal trail: move slightly sideways and fall down
+        tx = (Math.random() - 0.5) * 80;
+        ty = Math.random() * 100 + 50;
+        duration = Math.random() * 0.8 + 0.7;
+      }
+      
+      sparkle.style.setProperty('--tw-tx', `${tx}px`);
+      sparkle.style.setProperty('--tw-ty', `${ty}px`);
+      sparkle.style.animationDuration = `${duration}s`;
+      
+      // Random Shape: 0=Circle, 1=Star, 2=Heart
+      const shapeType = Math.floor(Math.random() * 3);
+      if (shapeType === 0) {
+        sparkle.style.borderRadius = '50%';
+      } else if (shapeType === 1) {
+        sparkle.style.clipPath = 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)';
+      } else {
+        sparkle.style.clipPath = 'path("M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z")';
+        sparkle.style.transformOrigin = 'center';
+        // When using scale with clipPath path, we need to handle the transform carefully
+        // Initial transform handled by keyframes
+      }
+
+      document.body.appendChild(sparkle);
+      
+      setTimeout(() => {
+        sparkle.remove();
+      }, duration * 1000);
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const now = Date.now();
+      if (now - lastTime > 40) {
+        createSparkle(e.clientX, e.clientY);
+        lastTime = now;
+      }
+    };
+
+    const handleClick = (e: MouseEvent) => {
+      // Create a burst of 12 sparkles in a circle
+      const particleCount = 12;
+      for (let i = 0; i < particleCount; i++) {
+        const angle = (i / particleCount) * Math.PI * 2;
+        const distance = 60 + Math.random() * 40;
+        createSparkle(e.clientX, e.clientY, true, angle, distance);
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('click', handleClick);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('click', handleClick);
+    };
+  }, []);
+
+  return null;
+};
+
 const App: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>(GameState.MENU);
   const [fadeOpacity, setFadeOpacity] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [activeModal, setActiveModal] = useState<ModalType>(null);
-  const [showIntro, setShowIntro] = useState(true); // 인트로 오버레이 상태
-  const [showAchievementToast, setShowAchievementToast] = useState(false); // 업적 토스트 상태
+  const [showIntro, setShowIntro] = useState(true);
+  const [showAchievementToast, setShowAchievementToast] = useState(false);
   
-  // 설정 관련 상태 (초기값: 볼륨 0.5, 텍스트 속도 70ms)
+  const [isImagesLoaded, setIsImagesLoaded] = useState(false);
+  const [loadProgress, setLoadProgress] = useState(0);
+
   const [volume, setVolume] = useState(0.5);
   const [isMuted, setIsMuted] = useState(false);
   const [textSpeed, setTextSpeed] = useState(70);
 
-  // 저장 슬롯 상태 (1~3번 슬롯)
   const [saveSlots, setSaveSlots] = useState<SaveSlot[]>([
     { id: 1, isUsed: false, timestamp: null },
     { id: 2, isUsed: false, timestamp: null },
@@ -32,10 +131,38 @@ const App: React.FC = () => {
   ]);
 
   const [unlockedAchievements, setUnlockedAchievements] = useState<Set<string>>(new Set());
-  
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // 초기 실행 시 업적 로드
+  useEffect(() => {
+    let loadedCount = 0;
+    const total = PRELOAD_IMAGES.length;
+
+    const preload = async () => {
+      const promises = PRELOAD_IMAGES.map((src) => {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.src = src;
+          img.onload = () => {
+            loadedCount++;
+            setLoadProgress(Math.floor((loadedCount / total) * 100));
+            resolve(src);
+          };
+          img.onerror = reject;
+        });
+      });
+
+      try {
+        await Promise.all(promises);
+        setIsImagesLoaded(true);
+      } catch (err) {
+        console.error("Image preload failed", err);
+        setIsImagesLoaded(true);
+      }
+    };
+
+    preload();
+  }, []);
+
   useEffect(() => {
     const saved = localStorage.getItem('unlocked_achievements');
     if (saved) {
@@ -47,7 +174,6 @@ const App: React.FC = () => {
     }
   }, []);
 
-  // 오디오 초기화 및 관리
   useEffect(() => {
     if (!audioRef.current) {
       const audio = new Audio("https://github.com/user-attachments/files/24315899/TAKE_10939.BLIND.LOVE.mp3");
@@ -58,14 +184,12 @@ const App: React.FC = () => {
     }
   }, []);
 
-  // 볼륨 및 음소거 변경 시 오디오 인스턴스 업데이트
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = isMuted ? 0 : volume;
     }
   }, [volume, isMuted]);
 
-  // 게임 완전 초기화 함수 (종료 버튼 시 호출)
   const resetGameFully = useCallback(() => {
     setGameState(GameState.MENU);
     setActiveModal(null);
@@ -88,8 +212,8 @@ const App: React.FC = () => {
     setShowIntro(true);
   }, []);
 
-  // 인트로 클릭 시 오디오 재생 및 오버레이 제거
   const handleIntroClick = () => {
+    if (!isImagesLoaded) return;
     if (audioRef.current) {
       audioRef.current.play().catch((e) => console.log("Audio play failed:", e));
     }
@@ -212,7 +336,7 @@ const App: React.FC = () => {
               </ul>
             </section>
             <div className="mt-6 space-y-1 opacity-60 text-xs italic">
-              <p>※ 今後, より多くの機能が追加される予定です</p>
+              <p>※ 今後, より多くの機能가 追加される 予定です</p>
               <p>※ 향후 더 많은 기능이 추가될 예정입니다</p>
             </div>
           </div>
@@ -234,7 +358,7 @@ const App: React.FC = () => {
                       : 'bg-[#b0e2ff] text-[#2f5373]'
                   }`}
                 >
-                  {isMuted ? "ミュート中 (음소거 중)" : "ミュート (음소거)"}
+                  {isMuted ? "ミュート중 (음소거 중)" : "ミュート (음소거)"}
                 </button>
               </div>
               <input 
@@ -369,16 +493,16 @@ const App: React.FC = () => {
 
   return (
     <div className="relative w-full h-screen bg-[#f8fbff] text-slate-900 overflow-hidden">
+      <SparkleCursor />
       {renderContent()}
       {renderModal()}
       <div className={`fixed inset-0 bg-white z-[9999] transition-opacity duration-700 pointer-events-none`} style={{ opacity: fadeOpacity, pointerEvents: isTransitioning ? 'auto' : 'none' }} />
       
-      {/* Intro Overlay - 문구 수정 및 따옴표 교정 */}
       {showIntro && (
         <div 
           id="intro-overlay"
           onClick={handleIntroClick}
-          className="fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-[#cbb7f0]/90 cursor-pointer p-10 sm:p-20 overflow-y-auto animate-in fade-in duration-700"
+          className={`fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-[#cbb7f0]/90 p-10 sm:p-20 overflow-y-auto animate-in fade-in duration-700 ${!isImagesLoaded ? 'cursor-wait' : 'cursor-pointer'}`}
         >
           <div className="max-w-2xl w-full text-white cocoa-font text-lg sm:text-xl text-left leading-relaxed select-none space-y-6 animate-in slide-in-from-bottom-4 duration-1000">
             <p>2024년 12월 24일, 마츠가야 중고등통합학교 자캐 커뮤니티에서 성사된 ‘모에미에’ 커플(♥)의 1주년을 축하하고자 제작한 『教えて！瑠衣くん！！』 연애 시뮬레이션 웹사이트를 공개합니다 ! ♡</p>
@@ -394,14 +518,22 @@ const App: React.FC = () => {
               <p>pc 환경에서의 플레이를 권장드립니다.</p>
             </div>
             
-            <div className="pt-10 text-center animate-pulse">
-              <p className="text-2xl font-bold">[ CLICK TO START ]</p>
+            <div className="pt-10 text-center">
+              {!isImagesLoaded ? (
+                <div className="space-y-2">
+                   <p className="text-xl font-bold animate-pulse">이미지 로딩 중... ({loadProgress}%)</p>
+                   <div className="w-full bg-white/20 h-1.5 rounded-full overflow-hidden">
+                     <div className="bg-white h-full transition-all duration-300" style={{ width: `${loadProgress}%` }} />
+                   </div>
+                </div>
+              ) : (
+                <p className="text-2xl font-bold animate-pulse">[ CLICK TO START ]</p>
+              )}
             </div>
           </div>
         </div>
       )}
 
-      {/* Achievement Toast - 추가 축소 */}
       <div className={`achievement-toast fixed bottom-6 right-6 z-[100000] ${showAchievementToast ? 'visible' : ''}`}>
         <div className="bg-white/95 backdrop-blur-md border border-pink-200 px-3 py-2 rounded-xl shadow-xl flex items-center space-x-2.5">
           <div className="w-7 h-7 bg-pink-100 rounded-full flex items-center justify-center text-lg shadow-inner">

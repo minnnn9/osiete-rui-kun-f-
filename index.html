@@ -49,6 +49,29 @@
             background: #d9e8ff;
             border-radius: 10px;
         }
+
+        /* Sparkle Particle Styles */
+        .sparkle {
+            position: fixed;
+            pointer-events: none;
+            z-index: 999999;
+            animation: sparkle-fall linear forwards;
+        }
+
+        @keyframes sparkle-fall {
+            0% {
+                transform: translate(0, 0) scale(0) rotate(0deg);
+                opacity: 0;
+            }
+            15% {
+                opacity: 1;
+                transform: translate(0, 0) scale(1) rotate(45deg);
+            }
+            100% {
+                transform: translate(var(--tw-tx), var(--tw-ty)) scale(0) rotate(180deg);
+                opacity: 0;
+            }
+        }
     </style>
 <script type="importmap">
 {

@@ -2,7 +2,8 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { DialoguePart } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || "" });
+// Always use process.env.API_KEY for the Google GenAI SDK
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const STORY_SYSTEM_PROMPT = `
 You are a creative writer for a high-quality visual novel game titled "Oshiete! Rui-kun!!". 
@@ -43,6 +44,7 @@ export const generateStoryNext = async (history: DialoguePart[], userAction?: st
       }
     });
 
+    // Extracting text output from GenerateContentResponse using the .text property
     const result = JSON.parse(response.text || "[]");
     return result;
   } catch (error) {
