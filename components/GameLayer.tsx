@@ -72,6 +72,7 @@ const GameLayer: React.FC<GameLayerProps> = ({
   const [typingText, setTypingText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [hasStartedDialogue, setHasStartedDialogue] = useState(false);
 
   const timerRef = useRef<number | null>(null);
 
@@ -88,7 +89,7 @@ const GameLayer: React.FC<GameLayerProps> = ({
   }, [currentIdx]);
 
   useEffect(() => {
-    if (!isLoaded || isTransitioning) return;
+    if (!isLoaded || isTransitioning || !hasStartedDialogue) return;
 
     killTimer();
     setTypingText("");
@@ -116,9 +117,14 @@ const GameLayer: React.FC<GameLayerProps> = ({
 
     timerRef.current = interval;
     return () => killTimer();
-  }, [currentIdx, isLoaded, isTransitioning, textSpeed]);
+  }, [currentIdx, isLoaded, isTransitioning, textSpeed, hasStartedDialogue]);
 
   const goNext = useCallback(() => {
+    if (!hasStartedDialogue) {
+      setHasStartedDialogue(true);
+      return;
+    }
+
     const scene = scenes[currentIdx];
     
     if (scene.choices) return;
@@ -135,7 +141,7 @@ const GameLayer: React.FC<GameLayerProps> = ({
         onBack();
       }
     }
-  }, [isTyping, currentIdx, scenes, onBack, onComplete]);
+  }, [isTyping, currentIdx, scenes, onBack, onComplete, hasStartedDialogue]);
 
   const goBackDialogue = useCallback(() => {
     if (currentIdx > 0) {
