@@ -2,7 +2,7 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { DialoguePart } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "" });
+const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || "" });
 
 const STORY_SYSTEM_PROMPT = `
 You are a creative writer for a high-quality visual novel game titled "Oshiete! Rui-kun!!". 
